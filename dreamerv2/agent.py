@@ -18,6 +18,7 @@ class Agent(common.Module):
     self._counter = step
     with tf.device('cpu:0'):
       self.step = tf.Variable(int(self._counter), tf.int64)
+      self.train_steps = tf.Variable(0, tf.int64)
     self._dataset = dataset
     self.wm = WorldModel(self.step, config)
     self._task_behavior = ActorCritic(config, self.step, self._num_act)
@@ -80,6 +81,8 @@ class Agent(common.Module):
         outputs = tf.nest.map_structure(lambda x: x[:, :-1], outputs)
       mets = self._expl_behavior.train(start, outputs, data)[-1]
       metrics.update({'expl_' + key: value for key, value in mets.items()})
+    self.train_steps.assign_add(tf.constant(1))
+    metrics['total_steps'] = self.train_steps
     return state, metrics
 
   @tf.function
