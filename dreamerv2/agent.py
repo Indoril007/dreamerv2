@@ -84,7 +84,8 @@ class Agent(common.Module):
 
   @tf.function
   def report(self, data):
-    return {'openl': self.wm.video_pred(data)}
+      return {'openl': self.wm.video_pred(data),
+              'reconstruct': self.wm.video_reconstruct(data)}
 
 
 class WorldModel(common.Module):
@@ -180,6 +181,20 @@ class WorldModel(common.Module):
     prior = self.rssm.imagine(data['action'][:6, 5:], init)
     openl = self.heads['image'](self.rssm.get_feat(prior)).mode()
     model = tf.concat([recon[:, :5] + 0.5, openl + 0.5], 1)
+    error = (model - truth + 1) / 2
+    video = tf.concat([truth, model, error], 2)
+    B, T, H, W, C = video.shape
+    return video.transpose((1, 2, 0, 3, 4)).reshape((T, H, B * W, C))
+
+  @tf.function
+  def video_reconstruct(self, data):
+    data = self.preprocess(data)
+    truth = data['image'][:6] + 0.5
+    embed = self.encoder(data)
+    states, _ = self.rssm.observe(embed[:6, :], data['action'][:6, :])
+    recon = self.heads['image'](
+        self.rssm.get_feat(states)).mode()[:6]
+    model = recon[:, :] + 0.5
     error = (model - truth + 1) / 2
     video = tf.concat([truth, model, error], 2)
     B, T, H, W, C = video.shape
