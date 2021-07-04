@@ -153,6 +153,7 @@ while step < config.steps:
   eval_driver(eval_policy, episodes=config.eval_eps)
   print('Start training.')
   train_driver(agnt.policy, steps=config.eval_every)
+  logger.scalar('trainer_total_env_steps', train_driver._total_steps)
   agnt.save(logdir / 'variables.pkl')
 for env in train_envs + eval_envs:
   try:

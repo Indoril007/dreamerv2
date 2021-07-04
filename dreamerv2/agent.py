@@ -81,8 +81,8 @@ class Agent(common.Module):
         outputs = tf.nest.map_structure(lambda x: x[:, :-1], outputs)
       mets = self._expl_behavior.train(start, outputs, data)[-1]
       metrics.update({'expl_' + key: value for key, value in mets.items()})
-    self.train_steps.assign_add(tf.constant(1))
-    metrics['total_steps'] = self.train_steps
+    self.train_steps.assign_add(1)
+    metrics['train_steps'] = self.train_steps
     return state, metrics
 
   @tf.function

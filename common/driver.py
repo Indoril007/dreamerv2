@@ -9,6 +9,7 @@ class Driver:
     self._on_steps = []
     self._on_resets = []
     self._on_episodes = []
+    self._total_steps = 0
     self._actspaces = [env.action_space.spaces for env in envs]
     self.reset()
 
@@ -59,6 +60,7 @@ class Driver:
       self._dones = list(dones)
       episode += sum(dones)
       step += len(dones)
+      self._total_steps += len(dones)
 
   def _convert(self, value):
     value = np.array(value)
